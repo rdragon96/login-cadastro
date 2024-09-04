@@ -1,3 +1,9 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = 'https://comsaduireftfxvivozu.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvbXNhZHVpcmVmdGZ4dml2b3p1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyNTQ4MjUwMCwiZXhwIjoyMDQxMDU4NTAwfQ.Ut_q7YpCOczYytS_FgR8XCZTdJwNMFGA0skMq4GTzQ0';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 document.addEventListener('DOMContentLoaded', () => {
     const cadastroForm = document.getElementById('cadastroForm');
     const message = document.getElementById('message');
@@ -9,33 +15,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const newPassword = document.getElementById('newPassword').value;
 
         try {
-            const response = await fetch('data/users.json');
-            let users = await response.json();
+            const { data, error } = await supabase.from('users').insert([
+                { username: newUsername, password: newPassword }
+            ]);
+            if (error) {
+                const { data: existingUsers, error: getUsersError } = await supabase.from('users').select('*');
+                if (existingUsers.some(user => user.username === newUsername)) {
+                    message.textContent = 'Este nome de usuário já existe.';
+                    message.style.color = 'red';
+                    return;
+                }
 
-            // Verificar se o usuário já existe
-            if (users.some(user => user.username === newUsername)) {
-                message.textContent = 'Este nome de usuário já existe.';
+                console.error('Erro ao cadastrar usuário:', error);
+                message.textContent = 'Erro ao processar o cadastro. Tente novamente.';
                 message.style.color = 'red';
-                return;
+            } else {
+                message.textContent = 'Cadastro realizado com sucesso!';
+                message.style.color = 'green';
+                cadastroForm.reset();
             }
-
-            // Adicionar novo usuário
-            users.push({ username: newUsername, password: newPassword });
-
-            // Criar blob e link para download
-            const blob = new Blob([JSON.stringify(users, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'users.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            message.textContent = 'Cadastro realizado com sucesso! O arquivo JSON foi baixado.';
-            message.style.color = 'green';
-            cadastroForm.reset();
         } catch (error) {
             console.error('Erro ao processar o cadastro:', error);
             message.textContent = 'Erro ao processar o cadastro. Tente novamente.';
