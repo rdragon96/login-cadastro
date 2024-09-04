@@ -1,3 +1,9 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = 'https://comsaduireftfxvivozu.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvbXNhZHVpcmVmdGZ4dml2b3p1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTcyNTQ4MjUwMCwiZXhwIjoyMDQxMDU4NTAwfQ.Ut_q7YpCOczYytS_FgR8XCZTdJwNMFGA0skMq4GTzQ0';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const message = document.getElementById('message');
@@ -9,8 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = document.getElementById('password').value;
 
         try {
-            const response = await fetch('data/users.json');
-            const users = await response.json();
+            const { data: users, error: getUsersError } = await supabase.from('users').select('*');
 
             const user = users.find(u => u.username === username && u.password === password);
 
